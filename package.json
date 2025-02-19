@@ -1,0 +1,13 @@
+{
+  "name": "outlook-leads-to-excel",
+  "description": "An Outlook add-in that allows users to export leads to an excel file",
+  "author": "Luís Silva",
+  "version": "0.1.0",
+  "scripts": {
+    "validate": "office-toolbox validate -m manifest.xml"
+  },
+  "dependencies": {
+    "office-toolbox": "^0.1.1"
+  },
+  "devDependencies": {}
+}
