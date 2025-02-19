@@ -1,0 +1,131 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Leads 2 Excel</title>
+    <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+    <script>
+      Office.onReady(function (info) {
+        if (info.host === Office.HostType.Outlook) {
+          // Office is ready
+          const exportButton = document.getElementById("export-button");
+          exportButton.addEventListener("click", exportEmailAddresses);
+        }
+      });
+
+      async function exportEmailAddresses() {
+        const emailAccount = document.getElementById("email-account").value;
+        const fileInput = document.getElementById("file-input").files[0];
+
+        if (!validateEmail(emailAccount)) {
+          alert("Please enter a valid email address.");
+          return;
+        }
+
+        if (emailAccount && fileInput) {
+          try {
+            const emailAddresses = await getAllEmailAddresses();
+            emailAddresses = emailAddresses.sort((a, b) => a.localeCompare(b));
+            saveToExcel(emailAddresses, fileInput.name);
+          } catch (error) {
+            alert("Error retrieving email addresses.");
+          }
+        } else {
+          alert("Please provide both the email account and the file location.");
+        }
+      }
+
+      function validateEmail(email) {
+        const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return regex.test(email);
+      }
+
+      async function getAllEmailAddresses() {
+        let emailAddresses = [];
+        let offset = 0;
+        let moreItems = true;
+
+        while (moreItems) {
+          const batch = await getEmailAddresses(offset);
+          emailAddresses = emailAddresses.concat(batch);
+          offset += 100;
+          moreItems = batch.length === 100;
+        }
+
+        return emailAddresses;
+      }
+
+      function getEmailAddresses(offset) {
+        return new Promise((resolve, reject) => {
+          Office.context.mailbox.makeEwsRequestAsync(
+            getEwsRequest(offset),
+            function (asyncResult) {
+              if (asyncResult.status === Office.AsyncResultStatus.Succeeded) {
+                const response = asyncResult.value;
+                const parser = new DOMParser();
+                const xmlDoc = parser.parseFromString(response, "text/xml");
+                const emailAddresses = Array.from(
+                  xmlDoc.getElementsByTagName("t:From")
+                ).map(
+                  (from) =>
+                    from.getElementsByTagName("t:EmailAddress")[0].textContent
+                );
+                resolve(emailAddresses);
+              } else {
+                reject(asyncResult.error.message);
+              }
+            }
+          );
+        });
+      }
+
+      function getEwsRequest(offset) {
+        return `
+          <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:m="http://schemas.microsoft.com/exchange/services/2006/messages" xmlns:t="http://schemas.microsoft.com/exchange/services/2006/types" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+            <soap:Header>
+              <t:RequestServerVersion Version="Exchange2013" />
+            </soap:Header>
+            <soap:Body>
+              <m:FindItem Traversal="Shallow">
+                <m:ItemShape>
+                  <t:BaseShape>IdOnly</t:BaseShape>
+                  <t:AdditionalProperties>
+                    <t:FieldURI FieldURI="item:Subject" />
+                    <t:FieldURI FieldURI="message:From" />
+                  </t:AdditionalProperties>
+                </m:ItemShape>
+                <m:IndexedPageItemView MaxEntriesReturned="100" Offset="${offset}" BasePoint="Beginning" />
+                <m:ParentFolderIds>
+                  <t:DistinguishedFolderId Id="inbox" />
+                </m:ParentFolderIds>
+              </m:FindItem>
+            </soap:Body>
+          </soap:Envelope>
+        `;
+      }
+
+      function saveToExcel(emailAddresses, fileName) {
+        const ws = XLSX.utils.json_to_sheet(
+          emailAddresses.map((email) => ({ Email: email }))
+        );
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Leads");
+        XLSX.writeFile(wb, fileName);
+      }
+    </script>
+  </head>
+  <body>
+    <h1>Leads 2 Excel</h1>
+    <label for="email-account">Email Account:</label>
+    <input
+      type="text"
+      id="email-account"
+      name="email-account"
+      placeholder="Leads e-mail account"
+      required
+    /><br /><br />
+    <label for="file-input">Save to File:</label>
+    <input type="file" id="file-input" name="file-input" required /><br /><br />
+    <button id="export-button">Export Emails</button>
+  </body>
+</html>
