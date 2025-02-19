@@ -13,24 +13,24 @@
 
   <!--Version. Updates from the store only get triggered if there is a version change. -->
   <Version>1.0.0.0</Version>
-  <ProviderName>[Provider name]</ProviderName>
-  <DefaultLocale>en-US</DefaultLocale>
+  <ProviderName>UNUA</ProviderName>
+  <DefaultLocale>pt-PT</DefaultLocale>
   <!-- The display name of your add-in. Used on the store and various places of the Office UI such as the add-ins dialog. -->
   <DisplayName DefaultValue="Leads 2 Excel" />
-  <Description DefaultValue="[Outlook Add-in description]"/>
+  <Description DefaultValue="Export e-mail addresses from Outlook to an Excel spreadsheet"/>
 
   <!-- Icon for your add-in. Used on installation screens and the add-ins dialog. -->
   <IconUrl DefaultValue="https://localhost:3000/assets/icon-64.png" />
   <HighResolutionIconUrl DefaultValue="https://localhost:3000/assets/icon-128.png"/>
 
   <!--If you plan to submit this add-in to the Office Store, uncomment the SupportUrl element below-->
-  <SupportUrl DefaultValue="[Insert the URL of a page that provides support information for the app]" />
+  <!-- <SupportUrl DefaultValue="[Insert the URL of a page that provides support information for the app]" /> -->
 
   <!-- Domains that will be allowed when navigating. For example, if you use ShowTaskpane and then have an href link, navigation will only be allowed if the domain is on this list. -->
   <AppDomains>
-    <AppDomain>AppDomain1</AppDomain>
-    <AppDomain>AppDomain2</AppDomain>
-    <AppDomain>AppDomain3</AppDomain>
+    <!-- <AppDomain>AppDomain1</AppDomain> -->
+    <!-- <AppDomain>AppDomain2</AppDomain> -->
+    <!-- <AppDomain>AppDomain3</AppDomain> -->
   </AppDomains>
   <!--End Basic Settings. -->
 
@@ -42,18 +42,12 @@
       <Set Name="Mailbox" MinVersion="1.1" />
     </Sets>
   </Requirements>
-  <FormSettings>
-    <Form xsi:type="ItemRead">
-      <DesktopSettings>
-        <SourceLocation DefaultValue="https://localhost:3000/index.html"/>
-        <RequestedHeight>250</RequestedHeight>
-      </DesktopSettings>
-    </Form>
-  </FormSettings>
 
-  <Permissions>ReadWriteItem</Permissions>
+  <Permissions>ReadWriteMailbox</Permissions>
   <Rule xsi:type="RuleCollection" Mode="Or">
     <Rule xsi:type="ItemIs" ItemType="Message" FormType="Read" />
+    <Rule xsi:type="ItemIs" ItemType="Message" FormType="Edit" />
+    <Rule xsi:type="ItemIs" ItemType="Message" FormType="New" />
   </Rule>
   <DisableEntityHighlighting>false</DisableEntityHighlighting>
 
@@ -67,22 +61,16 @@
       <Host xsi:type="MailHost">
 
         <DesktopFormFactor>
-          <!-- Location of the Functions that UI-less buttons can trigger (ExecuteFunction Actions). -->
-          <FunctionFile resid="Commands.Url" />
-
-          <!-- Message Read -->
-          <ExtensionPoint xsi:type="MessageReadCommandSurface">
-            <!-- Use the default tab of the ExtensionPoint or create your own with <CustomTab id="myTab"> -->
+          <!-- Ribbon -->
+          <ExtensionPoint xsi:type="MessageComposeCommandSurface">
             <OfficeTab id="TabDefault">
-              <!-- Up to 6 Groups added per Tab -->
-              <Group id="msgReadGroup">
-                <Label resid="GroupLabel" />
-                <!-- Launch the add-in : task pane button -->
-                <Control xsi:type="Button" id="msgReadOpenPaneButton">
-                  <Label resid="TaskpaneButton.Label" />
+              <Group id="msgComposeGroup">
+                <Label resid="Leads2Excel" />
+                <Control xsi:type="Button" id="msgComposeExportButton">
+                  <Label resid="ExportButton.Label" />
                   <Supertip>
-                    <Title resid="TaskpaneButton.Label" />
-                    <Description resid="TaskpaneButton.Tooltip" />
+                    <Title resid="ExportButton.Label" />
+                    <Description resid="ExportButton.Tooltip" />
                   </Supertip>
                   <Icon>
                     <bt:Image size="16" resid="Icon.16x16" />
@@ -93,11 +81,9 @@
                     <SourceLocation resid="Taskpane.Url" />
                   </Action>
                 </Control>
-                <!-- Go to http://aka.ms/ButtonCommands to learn how to add more Controls: ExecuteFunction and Menu -->
               </Group>
             </OfficeTab>
           </ExtensionPoint>
-          <!-- Go to http://aka.ms/ExtensionPointsCommands to learn how to add more Extension Points: MessageRead, AppointmentOrganizer, AppointmentAttendee -->
         </DesktopFormFactor>
       </Host>
     </Hosts>
@@ -109,15 +95,14 @@
         <bt:Image id="Icon.80x80" DefaultValue="https://localhost:3000/assets/icon-80.png"/>
       </bt:Images>
       <bt:Urls>
-        <bt:Url id="Commands.Url" DefaultValue="https://localhost:3000/commands.html" />
-        <bt:Url id="Taskpane.Url" DefaultValue="https://localhost:3000/taskpane.html" />
+        <bt:Url id="Taskpane.Url" DefaultValue="https://localhost:3000/src/taskpane.html" />
       </bt:Urls>
       <bt:ShortStrings>
-        <bt:String id="GroupLabel" DefaultValue="Contoso Add-in"/>
-        <bt:String id="TaskpaneButton.Label" DefaultValue="Show Taskpane"/>
+        <bt:String id="Leads2Excel" DefaultValue="Leads 2 Excel"/>
+        <bt:String id="ExportButton.Label" DefaultValue="Export Emails"/>
       </bt:ShortStrings>
       <bt:LongStrings>
-        <bt:String id="TaskpaneButton.Tooltip" DefaultValue="Opens a pane displaying all available properties."/>
+        <bt:String id="ExportButton.Tooltip" DefaultValue="Export all email addresses to an Excel spreadsheet."/>
       </bt:LongStrings>
     </Resources>
   </VersionOverrides>
